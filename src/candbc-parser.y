@@ -663,6 +663,7 @@ attribute_definition_default:
         switch(ad->value_type) {
         case vt_string:
           ad->default_value.string_val = $3;
+          printf("%s 's default_value.string_val is %s\n", ad->name, ad->default_value.string_val);
           break;
         case vt_enum:
           ad->default_value.enum_val = $3;

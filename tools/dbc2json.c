@@ -171,12 +171,30 @@ static int extract_attribute_definitions(JsonBuilder *builder, attribute_definit
     if (attribute_definition_list == NULL)
         return 0;
 
+    //为了获得 BusType ，进而判定是否支持 canfd
+    attribute_definition_list_t* attributes = attribute_definition_list;
+    json_builder_set_member_name(builder, "attribute_definitions_default");
+    json_builder_begin_object(builder);
+    while (attributes != NULL) {
+        attribute_definition_t *attribute_definition = attributes->attribute_definition;
+        if (attribute_definition->object_type == ot_network &&
+            attribute_definition->value_type == vt_string) {
+
+            json_builder_set_member_name(builder, attribute_definition->name);
+            json_builder_add_string_value(builder, attribute_definition->default_value.string_val);
+        }
+
+        attributes = attributes->next;
+    }
+    json_builder_end_object(builder);
+
     json_builder_set_member_name(builder, "attribute_definitions");
     json_builder_begin_object(builder);
 
     while (attribute_definition_list != NULL) {
         attribute_definition_t *attribute_definition = attribute_definition_list->attribute_definition;
 
+        printf(" name : %s,   object_type: %d ,   value_type: %d\n", attribute_definition->name, attribute_definition->object_type, attribute_definition->value_type);
         /* Extract ONLY enums of message objects */
         if (attribute_definition->object_type == ot_message &&
             attribute_definition->value_type == vt_enum) {
