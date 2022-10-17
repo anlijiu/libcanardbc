@@ -166,6 +166,37 @@ static void extract_message_signals(JsonBuilder *builder, signal_list_t* signal_
     json_builder_end_object(builder);
 }
 
+static int extract_network(JsonBuilder* builder, network_t* network) {
+    if(network == NULL || network->attribute_list == NULL) return 0;
+
+    attribute_list_t *attribute_list = network->attribute_list;
+
+    json_builder_set_member_name(builder, "network_attributes");
+    json_builder_begin_object(builder);
+    while (attribute_list != NULL) {
+        attribute_t * attribute = attribute_list->attribute;
+        string_t name = attribute->name;
+        attribute_value_t *value = attribute->value;
+
+        if(value->value_type == vt_enum) {
+            printf("network  name : %s,   vt_enum, value: %s \n", name, value->value.enum_val);
+        } else if(value->value_type == vt_integer) {
+            printf("network  name : %s,   vt_integer, value: %d \n", name, value->value.int_val);
+        } else if(value->value_type == vt_float) {
+            printf("network  name : %s,   vt_float, value: %f \n", name, value->value.double_val);
+        } else if(value->value_type == vt_string) {
+            json_builder_set_member_name(builder, name);
+            json_builder_add_string_value(builder, value->value.string_val);
+            printf("network  name : %s,   vt_string, value: %s \n", name, value->value.string_val);
+        } else if(value->value_type == vt_hex) {
+            printf("network  name : %s,   vt_hex, value: %x \n", name, value->value.hex_val);
+        }
+        attribute_list = attribute_list->next;
+    }
+    json_builder_end_object(builder);
+    return 0;
+}
+
 static int extract_attribute_definitions(JsonBuilder *builder, attribute_definition_list_t* attribute_definition_list)
 {
     if (attribute_definition_list == NULL)
@@ -292,6 +323,7 @@ static void write_dbc_to_file(dbc_t *dbc, const char *filename, stats_t *stats)
     json_builder_add_string_value(builder, dbc->version);
 
     /* Extract attribute definitions of messages ONLY */
+    extract_network(builder, dbc->network);
     extract_attribute_definitions(builder, dbc->attribute_definition_list);
     extract_messages(builder, dbc->message_list, stats);
 
